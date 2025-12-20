@@ -16,7 +16,7 @@ let startBalance = 0;
 let currentBalance = 0;
 let isPaused = false;
 let minStake = 5;
-const mcp = require('polygon-src');
+const mcp = require('polymarket-clob');
 
 export async function startBot(
   config: Config,
