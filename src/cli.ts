@@ -5,6 +5,8 @@ import { Config, SizingMode } from './config';
 import { startBot } from './bot';
 import { initializeWallet } from './wallet';
 import { setAllowancesFromEnv } from './relayer';
+import { PolymarketAPI } from './api';
+import { RealTrader } from './trader';
 
 const CONFIG_FILE = join(process.cwd(), 'config.json');
 
@@ -287,6 +289,77 @@ program
     console.log('2. Add wallets: npm run cli wallets add <address>');
     console.log('3. Check balance: npm run cli balance');
     console.log('4. Start bot: npm run bot\n');
+  });
+
+// Close All Positions command
+program
+  .command('close-all')
+  .description('Close all open positions (market sell)')
+  .option('--yes', 'Skip confirmation')
+  .action(async (options) => {
+    if (!process.env.PRIVATE_KEY) {
+      console.error('❌ PRIVATE_KEY not found in .env file!');
+      process.exit(1);
+    }
+
+    console.log('🔍 Fetching positions...\n');
+    
+    try {
+      const wallet = await initializeWallet();
+      const walletAddress = wallet.getProxyAddress() || wallet.getAddress();
+      
+      const api = new PolymarketAPI();
+      const positions = await api.getWalletPositions(walletAddress);
+      
+      const openPositions = positions.filter(p => p.size > 0.01);
+      
+      if (openPositions.length === 0) {
+        console.log('✅ No open positions to close');
+        return;
+      }
+      
+      console.log(`📊 Found ${openPositions.length} position(s):\n`);
+      
+      let totalValue = 0;
+      for (const pos of openPositions) {
+        const value = pos.size * (pos.currentPrice || pos.avgPrice);
+        totalValue += value;
+        console.log(`   ${pos.marketSlug?.substring(0, 40) || pos.tokenId.substring(0, 16)}`);
+        console.log(`   Size: ${pos.size.toFixed(2)} | Value: $${value.toFixed(2)}\n`);
+      }
+      
+      console.log(`💰 Total Value: $${totalValue.toFixed(2)}\n`);
+      
+      if (!options.yes) {
+        console.log('⚠️  This will sell ALL positions at market price!');
+        console.log('   Run with --yes to confirm\n');
+        return;
+      }
+      
+      console.log('🚀 Closing all positions...\n');
+      
+      const trader = new RealTrader();
+      await trader.initialize();
+      
+      // Cancel all open orders first
+      const cancelled = await trader.cancelAllOrders();
+      if (cancelled > 0) {
+        console.log(`  ✅ Cancelled ${cancelled} open order(s)\n`);
+      }
+      
+      const result = await trader.closeAllPositions(openPositions.map(p => ({
+        tokenId: p.tokenId,
+        size: p.size,
+        currentPrice: p.currentPrice || p.avgPrice,
+        marketSlug: p.marketSlug,
+      })));
+      
+      console.log(`\n✅ Done! Closed: ${result.closed}, Failed: ${result.failed}`);
+      
+    } catch (error: any) {
+      console.error('❌ Error:', error.message);
+      process.exit(1);
+    }
   });
 
 export function runCLI(): void {

@@ -1,0 +1,13 @@
+{
+  "wallets_to_track": [
+    "0x1234567890abcdef1234567890abcdef12345678",
+    "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+  ],
+  "mode": "proportional",
+  "min_stake": 5,
+  "max_stake": 300,
+  "max_buys_per_token": 3,
+  "cooldown_minutes": 30,
+  "trailing_stop_percent": 15,
+  "skip_sports": false
+}

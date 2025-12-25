@@ -1,5 +1,6 @@
 /**
  * Real trading execution using Polymarket CLOB API
+ * With retry logic for 502/503/timeout errors
  */
 
 import { ClobClient, Side, OrderType } from '@polymarket/clob-client';
@@ -18,6 +19,53 @@ export interface TradeResult {
   orderId?: string;
   error?: string;
   details?: any;
+}
+
+/**
+ * Retry wrapper for CLOB client calls
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  delayMs: number = 2000
+): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if error is retryable (502, 503, timeout, network)
+      const errorStr = String(error.message || error).toLowerCase();
+      const statusCode = error.response?.status || error.status;
+      
+      const isRetryable = 
+        statusCode === 502 ||
+        statusCode === 503 ||
+        statusCode === 504 ||
+        statusCode === 429 ||
+        errorStr.includes('502') ||
+        errorStr.includes('503') ||
+        errorStr.includes('bad gateway') ||
+        errorStr.includes('timeout') ||
+        errorStr.includes('econnreset') ||
+        errorStr.includes('enotfound') ||
+        errorStr.includes('network');
+      
+      if (isRetryable && attempt < maxRetries) {
+        const waitTime = delayMs * attempt;
+        console.log(`  ⚠️ CLOB error (${statusCode || 'network'}), retry ${attempt}/${maxRetries} in ${waitTime/1000}s...`);
+        await new Promise(r => setTimeout(r, waitTime));
+        continue;
+      }
+      
+      throw error;
+    }
+  }
+  
+  throw lastError;
 }
 
 export class RealTrader {
@@ -55,7 +103,7 @@ export class RealTrader {
     }
 
     try {
-      const price = await this.client.getPrice(tokenId, side);
+      const price = await withRetry(() => this.client!.getPrice(tokenId, side));
       return price ? parseFloat(price) : null;
     } catch (error: any) {
       logger.errorDetail('Error getting price', error);
@@ -101,8 +149,8 @@ export class RealTrader {
       let negRisk = false;
       
       try {
-        tickSize = await this.client.getTickSize(params.tokenId) as TickSize;
-        negRisk = await this.client.getNegRisk(params.tokenId);
+        tickSize = await withRetry(() => this.client!.getTickSize(params.tokenId)) as TickSize;
+        negRisk = await withRetry(() => this.client!.getNegRisk(params.tokenId));
       } catch (e) {
         // Use default tick size
       }
@@ -137,7 +185,7 @@ export class RealTrader {
         };
         const selectedOrderType = orderTypeMap[orderType] || OrderType.GTC;
         
-        order = await this.client.createAndPostOrder(
+        order = await withRetry(() => this.client!.createAndPostOrder(
           {
             tokenID: params.tokenId,
             price: orderPrice,
@@ -146,7 +194,7 @@ export class RealTrader {
           },
           { tickSize, negRisk },
           selectedOrderType
-        );
+        ));
       } finally {
         // Restore console
         console.log = originalLog;
@@ -157,6 +205,9 @@ export class RealTrader {
       if (!order || !order.orderID || order.error) {
         return { success: false, error: order?.error || 'Rejected' };
       }
+
+      // Invalidate balance cache after successful trade
+      this.wallet?.invalidateBalanceCache();
 
       return {
         success: true,
@@ -175,7 +226,7 @@ export class RealTrader {
     if (!this.client) return [];
     
     try {
-      const orders = await this.client.getOpenOrders();
+      const orders = await withRetry(() => this.client!.getOpenOrders());
       return orders || [];
     } catch (error) {
       return [];
@@ -189,8 +240,7 @@ export class RealTrader {
     if (!this.client) return false;
 
     try {
-      await this.client.cancelOrder({ orderID: orderId });
-      console.log(`✅ Order ${orderId} cancelled`);
+      await withRetry(() => this.client!.cancelOrder({ orderID: orderId }));
       return true;
     } catch (error: any) {
       logger.errorDetail('Cancel failed', error);
@@ -198,5 +248,75 @@ export class RealTrader {
     }
   }
 
-}
+  /**
+   * Cancel all open orders
+   */
+  async cancelAllOrders(): Promise<number> {
+    if (!this.client) return 0;
+    
+    try {
+      const orders = await this.getOpenOrders();
+      let cancelled = 0;
+      
+      for (const order of orders) {
+        if (await this.cancelOrder(order.id || order.orderID)) {
+          cancelled++;
+        }
+      }
+      
+      return cancelled;
+    } catch (error) {
+      return 0;
+    }
+  }
 
+  /**
+   * Close all positions (market sell)
+   */
+  async closeAllPositions(positions: Array<{ tokenId: string; size: number; currentPrice: number; marketSlug?: string }>): Promise<{ closed: number; failed: number }> {
+    let closed = 0;
+    let failed = 0;
+    
+    for (const pos of positions) {
+      if (pos.size < 0.01) continue;
+      
+      const sellValue = pos.size * pos.currentPrice;
+      const market = pos.marketSlug?.substring(0, 25) || pos.tokenId.substring(0, 16);
+      
+      console.log(`  Closing ${market}... ($${sellValue.toFixed(2)})`);
+      
+      // Try FOK first, then GTC
+      let result = await this.executeTrade({
+        tokenId: pos.tokenId,
+        side: 'SELL',
+        amount: sellValue,
+        price: pos.currentPrice,
+      }, 'FOK');
+      
+      if (!result.success) {
+        // Try with lower price
+        const lowerPrice = pos.currentPrice * 0.95;
+        result = await this.executeTrade({
+          tokenId: pos.tokenId,
+          side: 'SELL',
+          amount: pos.size * lowerPrice,
+          price: lowerPrice,
+        }, 'GTC');
+      }
+      
+      if (result.success) {
+        console.log(`  ✅ Closed ${market}`);
+        closed++;
+      } else {
+        console.log(`  ❌ Failed to close ${market}: ${result.error}`);
+        failed++;
+      }
+      
+      // Small delay between orders
+      await new Promise(r => setTimeout(r, 500));
+    }
+    
+    return { closed, failed };
+  }
+
+}

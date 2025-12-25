@@ -1,8 +1,55 @@
 /**
  * Wallet management and Polymarket CLOB client
+ * With retry logic for 502/503/timeout errors
  */
 
 import { ClobClient, AssetType } from '@polymarket/clob-client';
+
+/**
+ * Retry wrapper for CLOB client calls
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  delayMs: number = 2000
+): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      const errorStr = String(error.message || error).toLowerCase();
+      const statusCode = error.response?.status || error.status;
+      
+      const isRetryable = 
+        statusCode === 502 ||
+        statusCode === 503 ||
+        statusCode === 504 ||
+        statusCode === 429 ||
+        errorStr.includes('502') ||
+        errorStr.includes('503') ||
+        errorStr.includes('bad gateway') ||
+        errorStr.includes('timeout') ||
+        errorStr.includes('econnreset') ||
+        errorStr.includes('enotfound') ||
+        errorStr.includes('network');
+      
+      if (isRetryable && attempt < maxRetries) {
+        const waitTime = delayMs * attempt;
+        console.log(`  ⚠️ CLOB error (${statusCode || 'network'}), retry ${attempt}/${maxRetries} in ${waitTime/1000}s...`);
+        await new Promise(r => setTimeout(r, waitTime));
+        continue;
+      }
+      
+      throw error;
+    }
+  }
+  
+  throw lastError;
+}
 import { Wallet } from '@ethersproject/wallet';
 import { providers, Contract, BigNumber, utils } from 'ethers';
 import { formatUnits, formatEther } from '@ethersproject/units';
@@ -59,6 +106,11 @@ export class WalletManager {
   private proxyFactory: Contract;
   private proxyAddress: string | null = null;
   private initialized: boolean = false;
+  
+  // Balance cache to reduce CLOB API calls
+  private balanceCache: { balance: number; allowanceCTF: number; allowanceNegRisk: number } | null = null;
+  private balanceCacheTime: number = 0;
+  private readonly BALANCE_CACHE_TTL = 30000; // 30 seconds
 
   constructor(privateKey: string, funderAddress?: string) {
     if (!privateKey) {
@@ -170,17 +222,23 @@ export class WalletManager {
   }
 
   /**
-   * Get Polymarket collateral balance via API
+   * Get Polymarket collateral balance via API (with caching)
    */
-  async getPolymarketBalance(): Promise<{ balance: number; allowanceCTF: number; allowanceNegRisk: number }> {
+  async getPolymarketBalance(forceRefresh: boolean = false): Promise<{ balance: number; allowanceCTF: number; allowanceNegRisk: number }> {
     if (!this.authClient) {
       return { balance: 0, allowanceCTF: 0, allowanceNegRisk: 0 };
     }
 
+    // Return cached balance if still valid
+    const now = Date.now();
+    if (!forceRefresh && this.balanceCache && (now - this.balanceCacheTime) < this.BALANCE_CACHE_TTL) {
+      return this.balanceCache;
+    }
+
     try {
-      const result = await this.authClient.getBalanceAllowance({ 
+      const result = await withRetry(() => this.authClient!.getBalanceAllowance({ 
         asset_type: AssetType.COLLATERAL 
-      });
+      }));
       
       const balance = parseFloat(result.balance || '0') / 1e6;
       // API returns 'allowances' object but types say 'allowance' string
@@ -188,10 +246,26 @@ export class WalletManager {
       const allowanceCTF = parseFloat(allowances[CTF_EXCHANGE] || '0') / 1e6;
       const allowanceNegRisk = parseFloat(allowances[NEG_RISK_CTF_EXCHANGE] || '0') / 1e6;
       
-      return { balance, allowanceCTF, allowanceNegRisk };
+      // Update cache
+      this.balanceCache = { balance, allowanceCTF, allowanceNegRisk };
+      this.balanceCacheTime = now;
+      
+      return this.balanceCache;
     } catch (error) {
+      // Return cached value on error if available
+      if (this.balanceCache) {
+        return this.balanceCache;
+      }
       return { balance: 0, allowanceCTF: 0, allowanceNegRisk: 0 };
     }
+  }
+
+  /**
+   * Invalidate balance cache (call after trades)
+   */
+  invalidateBalanceCache(): void {
+    this.balanceCache = null;
+    this.balanceCacheTime = 0;
   }
 
   /**

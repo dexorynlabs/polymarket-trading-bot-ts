@@ -5,9 +5,11 @@
  * - data-api.polymarket.com - for user positions and trades
  * - gamma-api.polymarket.com - for market data
  * - clob.polymarket.com - for order book and trading
+ * 
+ * Features auto-retry on timeout/network errors
  */
 
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosError } from 'axios';
 
 // Trade from data-api
 export interface UserTrade {
@@ -54,6 +56,10 @@ export interface Market {
   endDate?: string;
 }
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
 export class PolymarketAPI {
   private dataApi: AxiosInstance;
   private gammaApi: AxiosInstance;
@@ -76,6 +82,92 @@ export class PolymarketAPI {
         'Accept': 'application/json',
       },
     });
+
+    // Add retry interceptors
+    this.setupRetryInterceptor(this.dataApi);
+    this.setupRetryInterceptor(this.gammaApi);
+  }
+
+  /**
+   * Setup retry interceptor for axios instance
+   */
+  private setupRetryInterceptor(instance: AxiosInstance): void {
+    instance.interceptors.response.use(
+      response => response,
+      async (error: AxiosError) => {
+        const config = error.config as any;
+        
+        // Initialize retry count
+        config.__retryCount = config.__retryCount || 0;
+        
+        // Check if should retry
+        const shouldRetry = this.isRetryableError(error) && config.__retryCount < MAX_RETRIES;
+        
+        if (!shouldRetry) {
+          return Promise.reject(error);
+        }
+        
+        config.__retryCount += 1;
+        
+        // Log retry (only on first retry to avoid spam)
+        if (config.__retryCount === 1) {
+          const errorType = this.getErrorType(error);
+          console.log(`  ⚠️ API ${errorType}, retrying...`);
+        }
+        
+        // Wait before retry with exponential backoff
+        const delay = RETRY_DELAY_MS * Math.pow(2, config.__retryCount - 1);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        return instance.request(config);
+      }
+    );
+  }
+
+  /**
+   * Check if error is retryable
+   */
+  private isRetryableError(error: AxiosError): boolean {
+    // Network errors (no response)
+    if (!error.response) {
+      return true;
+    }
+    
+    // Timeout
+    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+      return true;
+    }
+    
+    // Server errors (5xx)
+    if (error.response.status >= 500) {
+      return true;
+    }
+    
+    // Rate limiting (429)
+    if (error.response.status === 429) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Get human readable error type
+   */
+  private getErrorType(error: AxiosError): string {
+    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+      return 'timeout';
+    }
+    if (!error.response) {
+      return 'network error';
+    }
+    if (error.response.status === 429) {
+      return 'rate limited';
+    }
+    if (error.response.status >= 500) {
+      return `server error (${error.response.status})`;
+    }
+    return `error (${error.response?.status || 'unknown'})`;
   }
 
   /**

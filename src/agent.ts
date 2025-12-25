@@ -17,7 +17,7 @@ export async function analyzeEvent(
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini", // можно заменить на DeepSeek, Gemini и т.д.
+      model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
     });
