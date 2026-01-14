@@ -1,5 +1,7 @@
 # 🐋 Polymarket Copy Trading Bot
 
+**📬 Contact:** [Your Contact Here]
+
 Advanced automated copy trading bot for Polymarket prediction markets. Monitors whale wallets and copies their trades with intelligent position sizing, adaptive take-profit, and trailing stop-loss protection.
 
 ## ✨ Features

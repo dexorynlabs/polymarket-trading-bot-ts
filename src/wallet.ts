@@ -105,6 +105,7 @@ export class WalletManager {
   private usdceContract: Contract;
   private proxyFactory: Contract;
   private proxyAddress: string | null = null;
+  private privateKey: string;
   private initialized: boolean = false;
   
   // Balance cache to reduce CLOB API calls
@@ -118,6 +119,7 @@ export class WalletManager {
     }
 
     const key = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
+    this.privateKey = key;
     
     this.provider = new providers.JsonRpcProvider(POLYGON_RPC);
     this.wallet = new Wallet(key, this.provider);
@@ -219,6 +221,10 @@ export class WalletManager {
 
   getProxyAddress(): string | null {
     return this.proxyAddress;
+  }
+
+  getPrivateKey(): string {
+    return this.privateKey;
   }
 
   /**

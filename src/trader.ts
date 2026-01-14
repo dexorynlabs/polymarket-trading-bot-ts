@@ -140,31 +140,52 @@ export class RealTrader {
 
       return { bids, asks };
     } catch (error: any) {
-      logger.errorDetail('Error getting orderbook', error);
-      return null;
+      // Don't log 404 errors - they're expected for closed/resolved markets
+      const status = error?.response?.status || error?.status;
+      const errorMsg = error?.message || error?.toString() || '';
+      const is404 = status === 404 || errorMsg.includes('404') || errorMsg.toLowerCase().includes('no orderbook');
+      
+      if (!is404) {
+        logger.errorDetail('Error getting orderbook', error);
+      }
+      
+      // Rethrow error so caller can handle it
+      throw error;
     }
   }
 
   /**
    * Get best bid price (highest buy price) from orderbook
+   * Throws error if orderbook doesn't exist (market closed)
    */
   async getBestBid(tokenId: string): Promise<number | null> {
-    const book = await this.getOrderBook(tokenId);
-    if (!book || book.bids.length === 0) {
-      return null;
+    try {
+      const book = await this.getOrderBook(tokenId);
+      if (!book || book.bids.length === 0) {
+        return null;
+      }
+      return book.bids[0].price; // Highest bid
+    } catch (error) {
+      // Rethrow to let caller handle market closed errors
+      throw error;
     }
-    return book.bids[0].price; // Highest bid
   }
 
   /**
    * Get best ask price (lowest sell price) from orderbook
+   * Throws error if orderbook doesn't exist (market closed)
    */
   async getBestAsk(tokenId: string): Promise<number | null> {
-    const book = await this.getOrderBook(tokenId);
-    if (!book || book.asks.length === 0) {
-      return null;
+    try {
+      const book = await this.getOrderBook(tokenId);
+      if (!book || book.asks.length === 0) {
+        return null;
+      }
+      return book.asks[0].price; // Lowest ask
+    } catch (error) {
+      // Rethrow to let caller handle market closed errors
+      throw error;
     }
-    return book.asks[0].price; // Lowest ask
   }
 
   /**

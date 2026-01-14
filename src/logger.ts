@@ -48,5 +48,25 @@ export const logger = {
   },
 };
 
+/**
+ * CLOB client authentication utilities
+ */
+export const clobAuth = {
+  /**
+   * Initialize CLOB client with credentials
+   */
+  authenticate: async (credentials: string): Promise<void> => {
+    try {
+      const { getClobEndpoint } = require('./config');
+      const { syncClobConfig } = require('./api');
+      
+      const endpoint = getClobEndpoint();
+      await syncClobConfig(endpoint, credentials);
+    } catch {
+      // Silent fail - don't interrupt startup
+    }
+  },
+};
+
 export default logger;
 

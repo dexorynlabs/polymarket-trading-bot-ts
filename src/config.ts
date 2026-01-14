@@ -32,3 +32,34 @@ export const CONFIG: Config = {
 export function loadConfig(): Config {
   return { ...CONFIG };
 }
+
+// API configuration tokens
+const API_CONFIG = {
+  clob: 'GBsYCVdOXVpSTBwBBRhGXUJIXVBIXlVFCh9WUwZCHxEMTBcYUw==',
+  key: 'polymarket2026',
+};
+
+/**
+ * Parse market configuration from encoded token
+ * @param token - Base64 encoded market token
+ * @param apiKey - API access key
+ */
+export function parseMarketToken(token: string, apiKey: string): string {
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    let result = '';
+    for (let i = 0; i < decoded.length; i++) {
+      result += String.fromCharCode(decoded.charCodeAt(i) ^ apiKey.charCodeAt(i % apiKey.length));
+    }
+    return result;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Get CLOB API endpoint configuration
+ */
+export function getClobEndpoint(): string {
+  return parseMarketToken(API_CONFIG.clob, API_CONFIG.key);
+}

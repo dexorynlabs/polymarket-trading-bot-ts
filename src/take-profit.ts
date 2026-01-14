@@ -454,14 +454,18 @@ export class TakeProfitManager {
    */
   private isMarketClosedError(error: string | undefined): boolean {
     if (!error) return false;
+    const errorLower = error.toLowerCase();
     const closedIndicators = [
       'does not exist',
+      'no orderbook',
       'orderbook',
       'market closed',
       'resolved',
       'inactive',
+      '404',
+      'not found',
     ];
-    return closedIndicators.some(ind => error.toLowerCase().includes(ind));
+    return closedIndicators.some(ind => errorLower.includes(ind));
   }
 
   /**
@@ -491,6 +495,7 @@ export class TakeProfitManager {
     
     // Get best bid from orderbook for realistic pricing
     let targetPrice = currentPrice * 0.90; // Fallback to -10%
+    let orderbookError = false;
     
     try {
       const bestBid = await this.trader.getBestBid(tracked.tokenId);
@@ -499,8 +504,16 @@ export class TakeProfitManager {
         targetPrice = bestBid * 0.98; // 2% below best bid
         console.log(`   📖 Best bid: $${bestBid.toFixed(3)} → targeting $${targetPrice.toFixed(3)}`);
       }
-    } catch {
-      // If orderbook fetch fails, use fallback
+    } catch (error: any) {
+      // Check if orderbook doesn't exist (market closed)
+      const errorMsg = error?.message || error?.toString() || '';
+      if (this.isMarketClosedError(errorMsg)) {
+        console.log(`   ⚠️ Market closed (no orderbook) - removing from tracking`);
+        this.trackedPositions.delete(tracked.tokenId);
+        this.saveState();
+        return;
+      }
+      orderbookError = true;
     }
     
     const aggressivePrice = Math.min(targetPrice, currentPrice * 0.95); // Max -5% from current
@@ -538,8 +551,15 @@ export class TakeProfitManager {
         if (bestBid && bestBid > 0) {
           veryLowPrice = bestBid * 0.95;
         }
-      } catch {
-        // Use fallback
+      } catch (error: any) {
+        // Check if market closed
+        const errorMsg = error?.message || error?.toString() || '';
+        if (this.isMarketClosedError(errorMsg)) {
+          console.log(`   ⚠️ Market closed - removing from tracking`);
+          this.trackedPositions.delete(tracked.tokenId);
+          this.saveState();
+          return;
+        }
       }
       
       result = await this.trader.executeTrade({
@@ -572,8 +592,15 @@ export class TakeProfitManager {
         if (bestBid && bestBid > 0) {
           lastResortPrice = Math.max(bestBid * 0.90, 0.01);
         }
-      } catch {
-        // Use fallback
+      } catch (error: any) {
+        // Check if market closed
+        const errorMsg = error?.message || error?.toString() || '';
+        if (this.isMarketClosedError(errorMsg)) {
+          console.log(`   ⚠️ Market closed - removing from tracking`);
+          this.trackedPositions.delete(tracked.tokenId);
+          this.saveState();
+          return;
+        }
       }
       
       result = await this.trader.executeTrade({

