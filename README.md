@@ -1,4 +1,4 @@
-# 🐋 Polymarket Copy Trading Bot
+# 🐋 Polymarket Trading Bot (Copy Trading)
 
 **📬 Contact**
 - Telegram: https://t.me/dexoryn_here
@@ -7,7 +7,9 @@
 
 For the latest, more effective version of the bot or help running it, please contact the links above.
 
-Advanced automated copy trading bot for Polymarket prediction markets. Monitors whale wallets and copies their trades with intelligent position sizing, adaptive take-profit, and trailing stop-loss protection.
+Advanced Polymarket trading bot for copy trading in prediction markets. Monitors whale wallets and copies their trades with intelligent position sizing, adaptive take-profit, and trailing stop-loss protection.
+
+**SEO keywords:** polymarket bot, polymarket trading bot, polymarket copy trading bot, prediction market bot
 
 ## ✨ Features
 

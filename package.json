@@ -1,7 +1,7 @@
 {
   "name": "polymarket-copy-trading-bot",
   "version": "0.1.0",
-  "description": "Polymarket copy trading bot - TypeScript implementation",
+  "description": "Polymarket trading bot for copy trading and automated execution (TypeScript)",
   "main": "dist/main.js",
   "type": "commonjs",
   "scripts": {
@@ -19,9 +19,15 @@
   },
   "keywords": [
     "polymarket",
+    "polymarket bot",
+    "polymarket trading bot",
+    "polymarket copy trading bot",
+    "prediction market bot",
     "trading",
     "bot",
-    "copy-trading"
+    "copy-trading",
+    "copy trading",
+    "algorithmic trading"
   ],
   "author": "Dexoryn Labs (https://github.com/dexorynLabs)",
   "license": "MIT",
