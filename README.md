@@ -1,6 +1,9 @@
 # 🐋 Polymarket Copy Trading Bot
 
-**📬 Contact:** [**Telegram**](https://t.me/jackthem)
+**📬 Contact**
+- Telegram: https://t.me/dexoryn_here
+- GitHub: https://github.com/dexorynLabs
+- X (Twitter): https://x.com/dexoryn
 
 Advanced automated copy trading bot for Polymarket prediction markets. Monitors whale wallets and copies their trades with intelligent position sizing, adaptive take-profit, and trailing stop-loss protection.
 

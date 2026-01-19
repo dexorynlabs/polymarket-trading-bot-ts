@@ -23,7 +23,7 @@
     "bot",
     "copy-trading"
   ],
-  "author": "",
+  "author": "Dexoryn Labs (https://github.com/dexorynLabs)",
   "license": "MIT",
   "dependencies": {
     "@ethersproject/providers": "^5.8.0",
