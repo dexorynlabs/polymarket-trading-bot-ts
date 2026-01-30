@@ -69,12 +69,6 @@ While other Polymarket bots show screenshots or claim profitability, **this Poly
 - **Multi-trader support** - Track and copy from multiple traders simultaneously with independent strategies
 - **Real-time monitoring** - Sub-second trade detection and execution (1-second polling interval)
 
-### 📊 **Professional-Grade Tools**
-
-- **Trader research suite** - Find best performers, low-risk traders, and analyze market leaders
-- **Simulation & backtesting** - Test strategies before deploying real capital
-- **Performance auditing** - Validate algorithm accuracy and identify discrepancies
-- **Complete trade history** - MongoDB integration for persistent, queryable trade data
 
 ### 📈 **Comparison Table**
 
@@ -106,15 +100,7 @@ While other Polymarket bots show screenshots or claim profitability, **this Poly
 
 - **Beginners expecting guaranteed profits** - Trading involves risk; past performance doesn't guarantee future results
 - **"Set and forget forever" money printer seekers** - Requires monitoring and understanding of markets
-- **Users unwilling to learn** - Setup requires technical knowledge and configuration
 - **Risk-averse investors** - All trading involves risk of capital loss
-
-**Why This is the Best Polymarket Bot:**
-- ✅ Most feature-rich Polymarket trading bot available
-- ✅ Advanced Polymarket copy trading bot with trade aggregation
-- ✅ Professional-grade Polymarket bot architecture
-- ✅ Production-ready Polymarket trading bot solution
-- ✅ **Real profit proof with live demonstration videos**
 
 ---
 
@@ -152,20 +138,6 @@ python -m src.main
 **💡 Need help?** Contact [@dexoryn_here](https://t.me/dexoryn_here) on Telegram for Polymarket bot setup assistance or updated Polymarket trading bot versions.
 
 ---
-
-## Available Commands
-
-### Setup & Configuration | Polymarket Bot Setup
-```bash
-python -m src.scripts.setup.setup              # Interactive Polymarket bot setup wizard
-python -m src.scripts.setup.system_status       # Verify Polymarket trading bot system status
-python -m src.scripts.setup.help              # Display all Polymarket bot commands
-```
-
-### Main Bot | Start Your Polymarket Bot
-```bash
-python -m src.main                       # Start the Polymarket bot (Polymarket trading bot)
-```
 
 ## Configuration
 
@@ -279,19 +251,6 @@ Contributions are welcome! Please:
 
 ISC License - See [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
-
-This Polymarket copy trading bot is built on top of excellent open-source tools and services:
-
-- **Polymarket CLOB Client** - Built on [Polymarket CLOB Client](https://github.com/Polymarket/clob-client) (JavaScript SDK)
-- **Trader Analytics** - Uses [Predictfolio](https://predictfolio.com) for comprehensive trader analytics
-- **Blockchain Infrastructure** - Powered by Polygon network for fast, low-cost transactions
-- **Data Storage** - MongoDB for reliable, scalable data persistence
-
-**Special thanks to the Polymarket team** for building an amazing prediction market platform that enables copy trading strategies.
-
----
-
 ## ⚖️ Legal Disclaimer
 
 **Trading on Polymarket involves significant risk of financial loss** 
@@ -336,27 +295,6 @@ If you find this Polymarket bot, Polymarket trading bot, or Polymarket copy trad
 **Need help or updated version?** Contact [@dexoryn_here](https://t.me/dexoryn_here) on Telegram.
 
 **Your support helps make Polymarket bot trading more accessible to everyone!**
-
----
-
-## 🔍 SEO Keywords & Search Terms
-
-**Primary Keywords:**
-- polymarket bot
-- polymarket trading bot
-- polymarket copy trading bot
-- automated polymarket trading
-- polymarket automation
-- polymarket copy trading
-- polymarket prediction markets bot
-- polymarket defi bot
-- polygon trading bot
-- best polymarket bot
-- top polymarket trading bot
-- advanced polymarket copy trading bot
-- polymarket bot python
-- polymarket trading automation
-
 
 ---
 
