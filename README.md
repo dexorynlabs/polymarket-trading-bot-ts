@@ -17,14 +17,21 @@
 
 ### Video 1 — Live Copy Trading Run
 
-**Watch:** [Demo 1 - Live Copy Trading](videos/1.Dexoryn%20Labs%20Crypto%20casino%20+%20Trading%20bot%20development.mp4)  
+<video width="100%" controls>
+  <source src="videos/1.Dexoryn%20Labs%20Crypto%20casino%20+%20Trading%20bot%20development.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 - **+$80 profit in ~15 minutes**
 - Bot ran unattended during this session
 - Real on-chain execution, not simulation
 
 ### Video 2 — Second Run to confirm performance 
-**Watch:** [Demo 2 - Second Run](videos/2.Dexoryn%20Labs%20Crypto%20casino%20+%20Trading%20bot%20development%202.mp4)
+
+<video width="100%" controls>
+  <source src="videos/2.Dexoryn%20Labs%20Crypto%20casino%20+%20Trading%20bot%20development%202.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 
 - **Additional +$230 profit in next 15 mins**
@@ -49,6 +56,27 @@ Unlike other Polymarket bots that only show screenshots or claim to be "running,
 ---
 
 ## ⭐ Why This Bot is "Better" than Other's
+
+### 📸 Screenshots
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="videos/Screenshot/1.png" alt="Screenshot 1" width="100%"/>
+    </td>
+    <td align="center">
+      <img src="videos/Screenshot/2.png" alt="Screenshot 2" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="videos/Screenshot/3.png" alt="Screenshot 3" width="100%"/>
+    </td>
+    <td align="center">
+      <img src="videos/Screenshot/4.png" alt="Screenshot 4" width="100%"/>
+    </td>
+  </tr>
+</table>
 
 ### 🎯 **Real Profit Proof, Not Just Claims**
 
@@ -180,30 +208,6 @@ Create a `.env` file with the following variables:
 4. Set up monitoring and alerts
 5. Know how to stop the bot quickly (Ctrl+C)
 6. Run system status check before starting: `python -m src.scripts.setup.system_status`
-
-## Troubleshooting
-
-### Common Issues
-
-**Missing environment variables** → Run `python -m src.scripts.setup.setup` to create `.env` file
-
-**MongoDB connection failed** → Verify `MONGO_URI`, whitelist IP in MongoDB Atlas
-
-**Bot not detecting trades** → Verify trader addresses and check recent activity
-
-**Insufficient balance** → Add USDC to wallet and ensure POL/MATIC for gas fees
-
-**CLOB client errors** → The CLOB client needs full implementation (see Important Notes above)
-
-**Trade monitor not working** → The trade monitor service contains function stubs that need implementation (see Important Notes above)
-
-**WebSocket type errors** → If you see `AttributeError: module 'websockets' has no attribute 'client'`, ensure you're using `websockets>=12.0` and the codebase has been updated with compatible type annotations
-
-**Import errors** → Make sure you're running from the project root directory
-
-**Indentation errors** → Ensure all function definitions have at least a `pass` statement or implementation
-
-**Run system status check:** `python -m src.scripts.setup.system_status`
 
 **💡 Need Help?** Contact [@dexoryn_here](https://t.me/dexoryn_here) on Telegram for Polymarket bot setup assistance or updated Polymarket trading bot versions.
 
