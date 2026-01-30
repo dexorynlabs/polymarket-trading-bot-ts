@@ -284,25 +284,6 @@ ISC License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-Running this Polymarket trading bot? Need help setting up your Polymarket copy trading bot? Want the latest updated version with enhanced features?
-
-**Contact the developer for:**
-- ✅ Setup assistance and configuration help
-- ✅ Latest updated versions and new features
-- ✅ Custom Polymarket bot development
-- ✅ Polymarket trading bot optimization
-- ✅ Bug fixes and technical support
-- ✅ Advanced Polymarket copy trading bot features
-
-**📞 Contact Information:**
-- **💬 Telegram**: [@dexoryn_here](https://t.me/dexoryn_here) - *Fastest response for Polymarket bot support*
-- **🐦 Twitter**: [@dexoryn](https://x.com/dexoryn) - *Follow for Polymarket trading bot updates*
-- **💻 GitHub**: [@dexorynLabs](https://github.com/dexoryn) - *The programmer who made this bot*
-
-**Preferred Contact:** Telegram for quick Polymarket bot support and questions
-
----
-
 ## 🌟 Star History & Community | Polymarket Bot Support
 
 If you find this Polymarket bot, Polymarket trading bot, or Polymarket copy trading bot useful, please consider:
