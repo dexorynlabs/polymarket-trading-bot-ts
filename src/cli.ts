@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { Config, SizingMode } from './config';
+import { Config, SizingMode, loadConfig } from './config';
 import { startBot } from './bot';
 import { initializeWallet } from './wallet';
 import { setAllowancesFromEnv } from './relayer';
@@ -34,17 +34,11 @@ function saveConfigToFile(config: Config): void {
 
 function getConfig(): Config {
   const fileConfig = loadConfigFromFile();
+  const base = loadConfig();
   if (fileConfig) {
-    return fileConfig;
+    return { ...base, ...fileConfig };
   }
-  // Return default config
-  return {
-    wallets_to_track: [],
-    mode: 'proportional',
-    min_stake: 5,
-    max_stake: 300,
-    profit_take_percent: 15,
-  };
+  return base;
 }
 
 const program = new Command();

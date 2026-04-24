@@ -9,7 +9,7 @@
     "start": "node dist/main.js",
     "dev": "tsx src/main.ts",
     "watch": "tsc --watch",
-    "clean": "rm -rf dist",
+    "clean": "node -e \"const fs=require('fs');if(fs.existsSync('dist'))fs.rmSync('dist',{recursive:true})\"",
     "cli": "tsx src/main.ts",
     "bot": "tsx src/main.ts start",
     "balance": "tsx src/main.ts balance"
@@ -39,8 +39,7 @@
     "axios": "^1.6.0",
     "commander": "^11.1.0",
     "dotenv": "^16.3.1",
-    "ethers": "^5.7.2",
-    "openai": "^4.20.0"
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

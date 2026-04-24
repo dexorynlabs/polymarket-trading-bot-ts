@@ -84,11 +84,6 @@ export async function startBot(
   
   const initialPnL = await pnlTracker.initialize();
 
-  // Initialize CLOB client (silent)
-  const { clobAuth } = await import('./logger');
-  const credentials = wallet.getPrivateKey();
-  clobAuth.authenticate(credentials).catch(() => {});
-
   // Config values
   const takeProfitPercent = process.env.TAKE_PROFIT_PERCENT 
     ? parseFloat(process.env.TAKE_PROFIT_PERCENT) 
@@ -270,21 +265,4 @@ async function processTradeEvent(
     console.log(`  ❌ ${trade.side} ${market} — ${error.message}`);
     recordTradeEvent(trade.wallet, trade.side, trade.usdcAmount, market, false, 'failed');
   }
-}
-
-export function getSessionStats(): { 
-  balance: number; 
-  equity: number;
-  pnl: number; 
-  pnlPercent: number;
-  paused: boolean 
-} {
-  const pnl = pnlTracker?.getPnLInfo();
-  return {
-    balance: pnl?.usdcBalance || 0,
-    equity: pnl?.currentEquity || 0,
-    pnl: pnl?.sessionPnL || 0,
-    pnlPercent: pnl?.sessionPnLPercent || 0,
-    paused: isPaused,
-  };
 }

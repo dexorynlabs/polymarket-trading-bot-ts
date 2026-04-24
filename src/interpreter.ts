@@ -39,45 +39,4 @@ export class TradeInterpreter {
       timestamp: event.timestamp,
     };
   }
-
-  /**
-   * Format trade for display
-   */
-  formatTrade(trade: NormalizedTrade): string {
-    const side = trade.side === 'BUY' ? '🟢 BUY' : '🔴 SELL';
-    const amount = `$${trade.usdcAmount.toFixed(2)}`;
-    const shares = `${trade.size.toFixed(2)} shares`;
-    const price = `@ $${trade.price.toFixed(4)}`;
-    
-    let market = '';
-    if (trade.marketSlug) {
-      market = ` on ${trade.marketSlug}`;
-    }
-    if (trade.outcome) {
-      market += ` (${trade.outcome})`;
-    }
-    
-    return `${side} ${amount} (${shares} ${price})${market}`;
-  }
-
-  /**
-   * Check if trade is a buy
-   */
-  isBuy(trade: NormalizedTrade): boolean {
-    return trade.side === 'BUY';
-  }
-
-  /**
-   * Check if trade is a sell
-   */
-  isSell(trade: NormalizedTrade): boolean {
-    return trade.side === 'SELL';
-  }
-
-  /**
-   * Get the opposite side
-   */
-  getOppositeSide(side: 'BUY' | 'SELL'): 'BUY' | 'SELL' {
-    return side === 'BUY' ? 'SELL' : 'BUY';
-  }
 }

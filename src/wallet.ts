@@ -235,10 +235,6 @@ export class WalletManager {
     return this.proxyAddress;
   }
 
-  getPrivateKey(): string {
-    return this.privateKey;
-  }
-
   /**
    * Get Polymarket collateral balance via API (with caching)
    */
